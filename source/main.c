@@ -310,8 +310,8 @@ int main(int argc, char* argv[])
 		hidCircleRead(&cp);
 
 		int dir = 0;
-		if ((held & KEY_DPAD_RIGHT) || cp.dx > 30) dir += 1;
-		if ((held & KEY_DPAD_LEFT)  || cp.dx < -30) dir -= 1;
+		if ((held & KEY_DRIGHT) || cp.dx > 30) dir += 1;
+		if ((held & KEY_DLEFT)  || cp.dx < -30) dir -= 1;
 		int run = (held & KEY_B) ? 1 : 0;
 
 		updatePlayer(&g_player, dir, run, (down & KEY_A) ? 1 : 0, (held & KEY_A) ? 1 : 0);
