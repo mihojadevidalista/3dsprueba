@@ -1,4 +1,5 @@
-// Muñequito Runner - homebrew para Nintendo 3DS
+// Mi Juego 3DS - homebrew para Nintendo 3DS
+// Generado con Edit3DS
 // Controles: Cruceta o Stick = mover | A = saltar | B (mantener) = correr | START = salir
 
 #include <3ds.h>
@@ -7,27 +8,27 @@
 #include <string.h>
 #include <math.h>
 
-#define SW 400          // ancho de la pantalla superior
-#define SH 240          // alto de la pantalla superior
-#define T 16            // tamaño de cada bloque (pixeles)
-#define COLS 150        // ancho del nivel en bloques
-#define ROWS 15         // alto del nivel en bloques
-#define GOAL_COL 140    // columna de la meta
+#define SW 400
+#define SH 240
+#define T 16
+#define COLS 150
+#define ROWS 15
+#define GOAL_COL 140
 
-#define PW 10           // ancho del muñeco
-#define PH 24           // alto del muñeco
+#define PW 10
+#define PH 24
 
-#define WALK_SPEED 2.0f
-#define RUN_SPEED  3.5f
-#define GRAVITY    0.4f
-#define JUMP_SPEED 7.5f
-#define MAX_FALL   8.0f
+#define WALK_SPEED 2.00f
+#define RUN_SPEED  3.50f
+#define GRAVITY    0.40f
+#define JUMP_SPEED 7.50f
+#define MAX_FALL   8.00f
 
 typedef struct {
 	float x, y, vx, vy;
 	int onGround;
-	int facing;      // 1 = derecha, -1 = izquierda
-	float phase;     // fase de la animacion de las piernas
+	int facing;
+	float phase;
 } Player;
 
 unsigned char g_map[ROWS][COLS];
@@ -36,10 +37,6 @@ int g_wins = 0;
 int g_deaths = 0;
 
 static u8* fb;
-
-// ---------------------------------------------------------------
-// Dibujo (directo al framebuffer de la pantalla superior)
-// ---------------------------------------------------------------
 
 static void putRect(int x, int y, int w, int h, u8 r, u8 g, u8 b)
 {
@@ -76,11 +73,11 @@ static void putLine(int x0, int y0, int x1, int y1, int th, u8 r, u8 g, u8 b)
 
 static void drawTile(int sx, int sy)
 {
-	putRect(sx, sy, T, T, 200, 76, 12);               // ladrillo
-	putRect(sx, sy, T, 1, 240, 160, 90);              // borde claro arriba
-	putRect(sx, sy + T - 1, T, 1, 90, 30, 0);         // borde oscuro abajo
-	putRect(sx + T - 1, sy, 1, T, 90, 30, 0);         // borde oscuro derecha
-	putRect(sx + 7, sy + 4, 1, 8, 140, 50, 5);        // detalle
+	putRect(sx, sy, T, T, 200, 76, 12);
+	putRect(sx, sy, T, 1, 225, 157, 121);
+	putRect(sx, sy + T - 1, T, 1, 90, 34, 5);
+	putRect(sx + T - 1, sy, 1, T, 90, 34, 5);
+	putRect(sx + 7, sy + 4, 1, 8, 140, 53, 8);
 }
 
 static void drawCloud(int x, int y)
@@ -92,12 +89,11 @@ static void drawCloud(int x, int y)
 
 static void drawPlayer(int sx, int sy, const Player* p)
 {
-	const u8 cr = 20, cg = 20, cb = 20;   // color del "palito"
-	int cx = sx + 5;                      // centro del cuerpo
+	const u8 cr = 20, cg = 20, cb = 20;
+	int cx = sx + 5;
 	float swing = 0.0f;
 	if (p->onGround) swing = sinf(p->phase) * 5.0f;
 
-	// piernas
 	if (p->onGround) {
 		putLine(cx, sy + 16, cx + (int)swing, sy + 23, 2, cr, cg, cb);
 		putLine(cx, sy + 16, cx - (int)swing, sy + 23, 2, cr, cg, cb);
@@ -106,10 +102,8 @@ static void drawPlayer(int sx, int sy, const Player* p)
 		putLine(cx, sy + 16, cx + 4, sy + 22, 2, cr, cg, cb);
 	}
 
-	// cuerpo
 	putRect(cx - 1, sy + 8, 2, 9, cr, cg, cb);
 
-	// brazos
 	if (p->onGround) {
 		putLine(cx, sy + 10, cx - (int)(swing * 0.8f), sy + 16, 2, cr, cg, cb);
 		putLine(cx, sy + 10, cx + (int)(swing * 0.8f), sy + 16, 2, cr, cg, cb);
@@ -118,59 +112,65 @@ static void drawPlayer(int sx, int sy, const Player* p)
 		putLine(cx, sy + 10, cx + 5, sy + 5, 2, cr, cg, cb);
 	}
 
-	// cabeza con gorra roja (mira hacia donde camina)
 	putRect(sx + 1, sy, 8, 8, 255, 205, 150);
 	putRect(sx + 1, sy, 8, 3, 220, 30, 30);
 	if (p->facing > 0) {
-		putRect(sx + 7, sy + 4, 1, 2, 0, 0, 0);       // ojo derecha
-		putRect(sx + 8, sy + 2, 3, 2, 220, 30, 30);   // visera
+		putRect(sx + 7, sy + 4, 1, 2, 0, 0, 0);
+		putRect(sx + 8, sy + 2, 3, 2, 220, 30, 30);
 	} else {
-		putRect(sx + 2, sy + 4, 1, 2, 0, 0, 0);       // ojo izquierda
-		putRect(sx - 1, sy + 2, 3, 2, 220, 30, 30);   // visera
+		putRect(sx + 2, sy + 4, 1, 2, 0, 0, 0);
+		putRect(sx - 1, sy + 2, 3, 2, 220, 30, 30);
 	}
 }
-
-// ---------------------------------------------------------------
-// Nivel
-// ---------------------------------------------------------------
 
 static void buildLevel(void)
 {
 	memset(g_map, 0, sizeof(g_map));
-
-	// suelo: dos filas de bloques a lo largo de todo el camino
-	for (int c = 0; c < COLS; c++) {
-		g_map[13][c] = 1;
-		g_map[14][c] = 1;
-	}
-
-	// hoyo chico (2 bloques)
-	for (int c = 40; c < 42; c++) { g_map[13][c] = 0; g_map[14][c] = 0; }
-
-	// hoyo grande (6 bloques): hay que correr con B para pasarlo
-	for (int c = 78; c < 84; c++) { g_map[13][c] = 0; g_map[14][c] = 0; }
-
-	// bloques flotantes
-	for (int c = 20; c < 24; c++) g_map[9][c] = 1;
-	for (int c = 90; c < 95; c++) g_map[9][c] = 1;
-	for (int c = 100; c < 104; c++) g_map[10][c] = 1;
-
-	// bloques sueltos en el piso
-	g_map[12][30] = 1;
-	g_map[12][31] = 1;
+	g_map[0][149] = 1;
+	g_map[1][149] = 1;
+	g_map[2][149] = 1;
+	g_map[3][149] = 1;
+	g_map[4][149] = 1;
+	for (int c = 14; c <= 15; c++) g_map[5][c] = 1;
+	g_map[5][149] = 1;
+	g_map[6][14] = 1;
+	g_map[6][149] = 1;
+	g_map[7][149] = 1;
+	g_map[8][149] = 1;
+	for (int c = 20; c <= 23; c++) g_map[9][c] = 1;
+	g_map[9][58] = 1;
+	for (int c = 90; c <= 94; c++) g_map[9][c] = 1;
+	for (int c = 114; c <= 117; c++) g_map[9][c] = 1;
+	g_map[9][149] = 1;
+	for (int c = 57; c <= 58; c++) g_map[10][c] = 1;
+	g_map[10][70] = 1;
+	for (int c = 100; c <= 103; c++) g_map[10][c] = 1;
+	for (int c = 126; c <= 128; c++) g_map[10][c] = 1;
+	g_map[10][149] = 1;
 	g_map[11][31] = 1;
-
-	// escalera de 4 escalones
-	for (int h = 1; h <= 4; h++)
-		for (int r = 13 - h; r < 13; r++)
-			g_map[r][54 + h] = 1;
-
-	// columnas de bloques
-	for (int r = 11; r < 13; r++) g_map[r][65] = 1;
-	for (int r = 10; r < 13; r++) g_map[r][70] = 1;
-
-	// pared al final del mundo
-	for (int r = 0; r < ROWS; r++) g_map[r][COLS - 1] = 1;
+	for (int c = 56; c <= 58; c++) g_map[11][c] = 1;
+	g_map[11][65] = 1;
+	g_map[11][70] = 1;
+	g_map[11][149] = 1;
+	g_map[12][10] = 1;
+	g_map[12][19] = 1;
+	for (int c = 30; c <= 31; c++) g_map[12][c] = 1;
+	for (int c = 55; c <= 58; c++) g_map[12][c] = 1;
+	g_map[12][65] = 1;
+	g_map[12][70] = 1;
+	g_map[12][149] = 1;
+	for (int c = 0; c <= 6; c++) g_map[13][c] = 1;
+	for (int c = 9; c <= 11; c++) g_map[13][c] = 1;
+	for (int c = 14; c <= 39; c++) g_map[13][c] = 1;
+	for (int c = 42; c <= 77; c++) g_map[13][c] = 1;
+	for (int c = 84; c <= 119; c++) g_map[13][c] = 1;
+	for (int c = 122; c <= 149; c++) g_map[13][c] = 1;
+	for (int c = 0; c <= 6; c++) g_map[14][c] = 1;
+	for (int c = 9; c <= 11; c++) g_map[14][c] = 1;
+	for (int c = 14; c <= 39; c++) g_map[14][c] = 1;
+	for (int c = 42; c <= 77; c++) g_map[14][c] = 1;
+	for (int c = 84; c <= 119; c++) g_map[14][c] = 1;
+	for (int c = 122; c <= 149; c++) g_map[14][c] = 1;
 }
 
 static int solidAt(int tx, int ty)
@@ -183,17 +183,13 @@ static int solidAt(int tx, int ty)
 static void resetPlayer(void)
 {
 	g_player.x = 2 * T;
-	g_player.y = 13 * T - PH;
+	g_player.y = (12 + 1) * T - PH;
 	g_player.vx = 0;
 	g_player.vy = 0;
 	g_player.onGround = 1;
 	g_player.facing = 1;
 	g_player.phase = 0;
 }
-
-// ---------------------------------------------------------------
-// Fisica
-// ---------------------------------------------------------------
 
 static float approach(float v, float target, float step)
 {
@@ -204,25 +200,21 @@ static float approach(float v, float target, float step)
 
 static void updatePlayer(Player* p, int dir, int run, int jumpPressed, int jumpHeld)
 {
-	// --- movimiento horizontal ---
 	float target = dir * (run ? RUN_SPEED : WALK_SPEED);
 	float accel = p->onGround ? 0.30f : 0.18f;
 	if (dir == 0) accel = p->onGround ? 0.40f : 0.05f;
 	p->vx = approach(p->vx, target, accel);
 	if (dir != 0) p->facing = dir;
 
-	// --- salto ---
 	if (jumpPressed && p->onGround) {
 		p->vy = -JUMP_SPEED;
 		p->onGround = 0;
 	}
-	if (!jumpHeld && p->vy < -3.0f) p->vy = -3.0f;   // salto corto si sueltas A
+	if (!jumpHeld && p->vy < -3.0f) p->vy = -3.0f;
 
-	// --- gravedad ---
 	p->vy += GRAVITY;
 	if (p->vy > MAX_FALL) p->vy = MAX_FALL;
 
-	// --- mover en X y chocar ---
 	p->x += p->vx;
 	{
 		int top = (int)floorf(p->y / T);
@@ -240,7 +232,6 @@ static void updatePlayer(Player* p, int dir, int run, int jumpPressed, int jumpH
 		}
 	}
 
-	// --- mover en Y y chocar ---
 	p->y += p->vy;
 	p->onGround = 0;
 	{
@@ -268,28 +259,22 @@ static void updatePlayer(Player* p, int dir, int run, int jumpPressed, int jumpH
 		}
 	}
 
-	// --- animacion ---
 	if (p->onGround && fabsf(p->vx) > 0.1f)
 		p->phase += fabsf(p->vx) * 0.18f;
 	else if (p->onGround)
 		p->phase = 0;
 }
 
-// ---------------------------------------------------------------
-// Programa principal
-// ---------------------------------------------------------------
-
 int main(int argc, char* argv[])
 {
 	gfxInitDefault();
 	consoleInit(GFX_BOTTOM, NULL);
 
-	printf("\x1b[1;1H=== MUNEQUITO RUNNER ===");
+	printf("\x1b[1;1H=== Mi Juego 3DS ===");
 	printf("\x1b[4;1HCruceta / Stick : caminar");
 	printf("\x1b[6;1HA               : saltar");
 	printf("\x1b[8;1HB (mantener)    : correr");
 	printf("\x1b[10;1HLlega a la bandera roja!");
-	printf("\x1b[12;1HCuidado con los hoyos!");
 	printf("\x1b[14;1HSTART          : salir");
 	printf("\x1b[17;1HMetas: 0   Caidas: 0   ");
 
@@ -316,13 +301,11 @@ int main(int argc, char* argv[])
 
 		updatePlayer(&g_player, dir, run, (down & KEY_A) ? 1 : 0, (held & KEY_A) ? 1 : 0);
 
-		// se cayo a un hoyo
 		if (g_player.y > SH + 40) {
 			g_deaths++;
 			resetPlayer();
 		}
 
-		// llego a la meta
 		if (g_player.x > GOAL_COL * T) {
 			g_wins++;
 			resetPlayer();
@@ -334,18 +317,16 @@ int main(int argc, char* argv[])
 			lastDeaths = g_deaths;
 		}
 
-		// camara
 		float cam = g_player.x + PW / 2 - SW / 2;
 		if (cam < 0) cam = 0;
 		if (cam > COLS * T - SW) cam = COLS * T - SW;
 		int camx = (int)cam;
 
-		// --- dibujar ---
 		fb = gfxGetFramebuffer(GFX_TOP, GFX_LEFT, NULL, NULL);
 
-		putRect(0, 0, SW, SH, 92, 148, 252);                // cielo
+		putRect(0, 0, SW, SH, 92, 148, 252);
 
-		for (int i = 0; i < 8; i++) {                       // nubes (parallax)
+		for (int i = 0; i < 8; i++) {
 			int wx = 60 + i * 330;
 			drawCloud(wx - camx / 2, 20 + (i % 3) * 22);
 		}
@@ -359,12 +340,11 @@ int main(int argc, char* argv[])
 			}
 		}
 
-		// bandera de la meta
 		{
 			int px = GOAL_COL * T - camx;
-			putRect(px + 6, 4 * T, 4, 9 * T, 220, 220, 220);   // mastil
-			putRect(px + 10, 4 * T + 2, 20, 12, 220, 30, 30);  // bandera
-			putRect(px + 4, 4 * T - 4, 8, 4, 255, 215, 0);     // punta
+			putRect(px + 6, 4 * T, 4, 9 * T, 220, 220, 220);
+			putRect(px + 10, 4 * T + 2, 20, 12, 220, 30, 30);
+			putRect(px + 4, 4 * T - 4, 8, 4, 255, 215, 0);
 		}
 
 		drawPlayer((int)(g_player.x - camx), (int)g_player.y, &g_player);
