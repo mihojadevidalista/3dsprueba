@@ -11,8 +11,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Compilar
-        run: make
-      - name: Subir el .3dsx
+        run: |
+          export PATH=$PATH:/opt/devkitpro/devkitARM/bin:/opt/devkitpro/tools/bin
+          arm-none-eabi-gcc -specs=3dsx.specs -march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft -O2 -D__3DS__ -I/opt/devkitpro/libctru/include source/main.c -L/opt/devkitpro/libctru/lib -lctru -lm -o hola3ds.elf
+          smdhtool --create "Hola 3DS" "Mi primer homebrew" "Yo" /opt/devkitpro/libctru/default_icon.png hola3ds.smdh
+          3dsxtool hola3ds.elf hola3ds.3dsx --smdh=hola3ds.smdh
+      - name: Subir el 3dsx
         uses: actions/upload-artifact@v4
         with:
           name: hola3ds
