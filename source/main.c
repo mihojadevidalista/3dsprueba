@@ -73,11 +73,11 @@ static void putLine(int x0, int y0, int x1, int y1, int th, u8 r, u8 g, u8 b)
 
 static void drawTile(int sx, int sy)
 {
-	putRect(sx, sy, T, T, 200, 76, 12);
-	putRect(sx, sy, T, 1, 225, 157, 121);
-	putRect(sx, sy + T - 1, T, 1, 90, 34, 5);
-	putRect(sx + T - 1, sy, 1, T, 90, 34, 5);
-	putRect(sx + 7, sy + 4, 1, 8, 140, 53, 8);
+	putRect(sx, sy, T, T, 15, 145, 13);
+	putRect(sx, sy, T, 1, 123, 195, 122);
+	putRect(sx, sy + T - 1, T, 1, 7, 65, 6);
+	putRect(sx + T - 1, sy, 1, T, 7, 65, 6);
+	putRect(sx + 7, sy + 4, 1, 8, 11, 102, 9);
 }
 
 static void drawCloud(int x, int y)
@@ -129,8 +129,10 @@ static void buildLevel(void)
 	g_map[0][149] = 1;
 	g_map[1][149] = 1;
 	g_map[2][149] = 1;
+	for (int c = 112; c <= 113; c++) g_map[3][c] = 1;
 	g_map[3][149] = 1;
 	g_map[4][149] = 1;
+	g_map[5][7] = 1;
 	for (int c = 14; c <= 15; c++) g_map[5][c] = 1;
 	g_map[5][149] = 1;
 	g_map[6][14] = 1;
@@ -145,19 +147,24 @@ static void buildLevel(void)
 	for (int c = 57; c <= 58; c++) g_map[10][c] = 1;
 	g_map[10][70] = 1;
 	for (int c = 100; c <= 103; c++) g_map[10][c] = 1;
+	for (int c = 108; c <= 109; c++) g_map[10][c] = 1;
 	for (int c = 126; c <= 128; c++) g_map[10][c] = 1;
 	g_map[10][149] = 1;
+	g_map[11][6] = 1;
 	g_map[11][31] = 1;
 	for (int c = 56; c <= 58; c++) g_map[11][c] = 1;
 	g_map[11][65] = 1;
 	g_map[11][70] = 1;
+	for (int c = 108; c <= 109; c++) g_map[11][c] = 1;
 	g_map[11][149] = 1;
+	for (int c = 5; c <= 6; c++) g_map[12][c] = 1;
 	g_map[12][10] = 1;
 	g_map[12][19] = 1;
 	for (int c = 30; c <= 31; c++) g_map[12][c] = 1;
 	for (int c = 55; c <= 58; c++) g_map[12][c] = 1;
 	g_map[12][65] = 1;
 	g_map[12][70] = 1;
+	for (int c = 108; c <= 109; c++) g_map[12][c] = 1;
 	g_map[12][149] = 1;
 	for (int c = 0; c <= 6; c++) g_map[13][c] = 1;
 	for (int c = 9; c <= 11; c++) g_map[13][c] = 1;
@@ -324,7 +331,7 @@ int main(int argc, char* argv[])
 
 		fb = gfxGetFramebuffer(GFX_TOP, GFX_LEFT, NULL, NULL);
 
-		putRect(0, 0, SW, SH, 92, 148, 252);
+		putRect(0, 0, SW, SH, 87, 146, 255);
 
 		for (int i = 0; i < 8; i++) {
 			int wx = 60 + i * 330;
