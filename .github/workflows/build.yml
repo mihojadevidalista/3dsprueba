@@ -13,13 +13,13 @@ jobs:
       - name: Compilar
         run: |
           export PATH=$PATH:/opt/devkitpro/devkitARM/bin:/opt/devkitpro/tools/bin
-          arm-none-eabi-gcc -specs=3dsx.specs -march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft -O2 -D__3DS__ -I/opt/devkitpro/libctru/include source/*.c -L/opt/devkitpro/libctru/lib -lctru -lm -o muneco.elf
-          smdhtool --create "Munequito Runner" "Mi primer juego" "Yo" /opt/devkitpro/libctru/default_icon.png muneco.smdh
-          3dsxtool muneco.elf muneco.3dsx --smdh=muneco.smdh
+          arm-none-eabi-gcc -specs=3dsx.specs -march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft -O2 -D__3DS__ -I/opt/devkitpro/libctru/include source/*.c -L/opt/devkitpro/libctru/lib -lctru -lm -o mi_juego_3ds.elf
+          smdhtool --create "Mi Juego 3DS" "Hecho con Edit3DS" "Yo" /opt/devkitpro/libctru/default_icon.png mi_juego_3ds.smdh
+          3dsxtool mi_juego_3ds.elf mi_juego_3ds.3dsx --smdh=mi_juego_3ds.smdh
       - name: Subir el 3dsx
         uses: actions/upload-artifact@v4
         with:
-          name: muneco
+          name: mi_juego_3ds
           path: |
-            muneco.3dsx
-            muneco.smdh
+            mi_juego_3ds.3dsx
+            mi_juego_3ds.smdh
